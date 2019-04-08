@@ -33,7 +33,7 @@ from sklearn.model_selection import train_test_split
 x_train,x_test,y_train,y_test = train_test_split(df['x'].values.reshape(-1,1)
     ,df['y'], test_size=args.test_size,random_state=args.seed)
 #StandardScaler用于标准化数据集
-#fit方法计算用于以后缩放的mean和std,默认参数情况下，mean是 数据值 - 平均数
+#fit方法计算用于以后缩放的mean和std,默认参数情况下，mean是平均数
 #std是标准差，就是所有数减去其平均值的平方和，所得结果除以该组数之个数（或个数减一，即变异数），再把所得值开根号，所得之数就是这组数据的标准差
 x_scaler = StandardScaler().fit(x_train)
 y_scaler = StandardScaler().fit(y_train.values.reshape(-1,1))
@@ -46,13 +46,14 @@ standardized_y_train = y_scaler.transform(y_train.values.reshape(-1,1)).ravel()
 standardized_x_test = x_scaler.transform(x_test)
 standardized_y_test = y_scaler.transform(y_test.values.reshape(-1,1)).ravel()
 
-#loss:要是用的损失函数，默认是squared_loss，最小二乘法拟合
+#loss:要是用的损失函数，默认是squared_loss，方差拟合
 #penalty：使用的惩罚
 lm = SGDRegressor(loss='squared_loss', penalty='none', max_iter=args.num_epochs)
 #使用梯度下降模型
 lm.fit(X=standardized_x_train,y=standardized_y_train)
 #predict：进行数据预测
 #scaler.var_是方差，np.sqrt(y_scaler.var_)就是标准差,y_scaler.scale_也是标准差，是一样的
+#实际输出结果就是 (模拟的输出结果 * 标准差) + 平均数 和标准化过程刚好相反 
 pred_train = (lm.predict(standardized_x_train) * y_scaler.scale_) + y_scaler.mean_
 pred_test = (lm.predict(standardized_x_test) * np.sqrt(y_scaler.var_)) + y_scaler.mean_
 
@@ -76,3 +77,5 @@ coef = lm.coef_ * (y_scaler.scale_/x_scaler.scale_)
 intercept = lm.intercept_ * y_scaler.scale_ + y_scaler.mean_ - np.sum(coef*x_scaler.mean_)
 print (coef) # ~3.65
 print (intercept) # ~10
+
+#博客链接https://blog.csdn.net/WonderfulMTF/article/details/89113327
